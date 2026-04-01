@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Sharing Online</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📁 File Sharing Online</h1>
+            <p>Upload and share your files easily</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <h2>Drop files here or click to upload</h2>
+                    <p>Support for single or multiple file uploads</p>
+                    <input type="file" id="fileInput" multiple hidden>
+                    <button class="upload-btn" id="uploadBtn">Choose Files</button>
+                </div>
+            </div>
+
+            <div class="files-section" id="filesSection">
+                <h2>Uploaded Files</h2>
+                <div class="files-list" id="filesList"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Built with ❤️ for easy file sharing</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
