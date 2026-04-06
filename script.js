@@ -1,6 +1,8 @@
 // File storage array
 let uploadedFiles = [];
 
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+
 // DOM elements
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
@@ -35,6 +37,11 @@ function handleFiles(e) {
     const files = Array.from(e.target.files);
 
     files.forEach(file => {
+        if (file.size > MAX_FILE_SIZE) {
+            alert(`File "${file.name}" exceeds the maximum allowed size of 500 MB.`);
+            return;
+        }
+
         const fileData = {
             id: Date.now() + Math.random(),
             name: file.name,
@@ -87,27 +94,59 @@ function displayFiles() {
     uploadedFiles.forEach(fileData => {
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item';
-        fileItem.innerHTML = `
-            <div class="file-info">
-                <div class="file-icon">${getFileIcon(fileData.type)}</div>
-                <div class="file-details">
-                    <h3>${fileData.name}</h3>
-                    <p>${fileData.size} • ${fileData.uploadDate}</p>
-                </div>
-            </div>
-            <div class="file-actions">
-                <button class="action-btn download-btn" onclick="downloadFile('${fileData.id}')">Download</button>
-                <button class="action-btn share-btn" onclick="shareFile('${fileData.id}')">Share</button>
-                <button class="action-btn delete-btn" onclick="deleteFile('${fileData.id}')">Delete</button>
-            </div>
-        `;
+
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'file-info';
+
+        const iconEl = document.createElement('div');
+        iconEl.className = 'file-icon';
+        iconEl.textContent = getFileIcon(fileData.type);
+
+        const details = document.createElement('div');
+        details.className = 'file-details';
+
+        const nameEl = document.createElement('h3');
+        nameEl.textContent = fileData.name;
+
+        const metaEl = document.createElement('p');
+        metaEl.textContent = fileData.size + ' • ' + fileData.uploadDate;
+
+        details.appendChild(nameEl);
+        details.appendChild(metaEl);
+        fileInfo.appendChild(iconEl);
+        fileInfo.appendChild(details);
+
+        const actions = document.createElement('div');
+        actions.className = 'file-actions';
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'action-btn download-btn';
+        downloadBtn.textContent = 'Download';
+        downloadBtn.addEventListener('click', () => downloadFile(fileData.id));
+
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'action-btn share-btn';
+        shareBtn.textContent = 'Share';
+        shareBtn.addEventListener('click', () => shareFile(fileData.id));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'action-btn delete-btn';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteFile(fileData.id));
+
+        actions.appendChild(downloadBtn);
+        actions.appendChild(shareBtn);
+        actions.appendChild(deleteBtn);
+
+        fileItem.appendChild(fileInfo);
+        fileItem.appendChild(actions);
         filesList.appendChild(fileItem);
     });
 }
 
 // Download file
 function downloadFile(id) {
-    const fileData = uploadedFiles.find(f => f.id == id);
+    const fileData = uploadedFiles.find(f => f.id === id);
     if (!fileData) return;
 
     const link = document.createElement('a');
@@ -118,7 +157,7 @@ function downloadFile(id) {
 
 // Share file
 function shareFile(id) {
-    const fileData = uploadedFiles.find(f => f.id == id);
+    const fileData = uploadedFiles.find(f => f.id === id);
     if (!fileData) return;
 
     // Create a shareable link (in a real app, this would be a server URL)
@@ -131,21 +170,21 @@ function shareFile(id) {
             url: fileData.url
         }).catch(err => console.log('Error sharing:', err));
     } else {
-        // Fallback: copy to clipboard
-        const tempInput = document.createElement('input');
-        tempInput.value = fileData.url;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        alert('Link copied to clipboard!');
+        // Fallback: copy to clipboard using modern Clipboard API
+        navigator.clipboard.writeText(fileData.url)
+            .then(() => alert('Link copied to clipboard!'))
+            .catch(() => alert('Failed to copy link to clipboard.'));
     }
 }
 
 // Delete file
 function deleteFile(id) {
     if (confirm('Are you sure you want to delete this file?')) {
-        uploadedFiles = uploadedFiles.filter(f => f.id != id);
+        const fileData = uploadedFiles.find(f => f.id === id);
+        if (fileData && fileData.url) {
+            URL.revokeObjectURL(fileData.url);
+        }
+        uploadedFiles = uploadedFiles.filter(f => f.id !== id);
         displayFiles();
     }
 }
