@@ -65,6 +65,16 @@ This is a client-side application. Files are stored temporarily in the browser's
 - Password protection for shared files
 - File size limits and validation
 
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for a full guide on how to:
+
+- Fork this repository and create a branch
+- Make and test your changes
+- Open a pull request
+
+Maintainers can also find instructions there for **merging pull requests locally** using git.
+
 ## License
 
 MIT License - Feel free to use and modify!
