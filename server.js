@@ -9,7 +9,7 @@ const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Socket.io with permissive CORS
 const io = new Server(server, {
@@ -558,8 +558,8 @@ app.delete('/api/items/:id', (req, res) => {
   const item = sharedItems[itemIndex];
   
   if (item.type === 'file' && item.path) {
-    const filePath = path.join(__dirname, item.path);
-    if (fs.existsSync(filePath)) {
+    const filePath = path.resolve(path.join(__dirname, item.path));
+    if (filePath.startsWith(uploadsDir + path.sep) && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
   }

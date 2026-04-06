@@ -1,6 +1,9 @@
 // File storage array
 let uploadedFiles = [];
 
+// Maximum allowed file size (100 MB)
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
+
 // DOM elements
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
@@ -35,6 +38,11 @@ function handleFiles(e) {
     const files = Array.from(e.target.files);
 
     files.forEach(file => {
+        if (file.size > MAX_FILE_SIZE) {
+            alert(`"${file.name}" exceeds the 100 MB size limit and was not added.`);
+            return;
+        }
+
         const fileData = {
             id: Date.now() + Math.random(),
             name: file.name,
@@ -74,6 +82,13 @@ function getFileIcon(type) {
     return '📎';
 }
 
+// Escape a string for safe insertion into HTML
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // Display uploaded files
 function displayFiles() {
     if (uploadedFiles.length === 0) {
@@ -91,23 +106,28 @@ function displayFiles() {
             <div class="file-info">
                 <div class="file-icon">${getFileIcon(fileData.type)}</div>
                 <div class="file-details">
-                    <h3>${fileData.name}</h3>
-                    <p>${fileData.size} • ${fileData.uploadDate}</p>
+                    <h3>${escapeHtml(fileData.name)}</h3>
+                    <p>${escapeHtml(fileData.size)} • ${escapeHtml(fileData.uploadDate)}</p>
                 </div>
             </div>
             <div class="file-actions">
-                <button class="action-btn download-btn" onclick="downloadFile('${fileData.id}')">Download</button>
-                <button class="action-btn share-btn" onclick="shareFile('${fileData.id}')">Share</button>
-                <button class="action-btn delete-btn" onclick="deleteFile('${fileData.id}')">Delete</button>
+                <button class="action-btn download-btn" data-id="${fileData.id}">Download</button>
+                <button class="action-btn share-btn" data-id="${fileData.id}">Share</button>
+                <button class="action-btn delete-btn" data-id="${fileData.id}">Delete</button>
             </div>
         `;
+
+        fileItem.querySelector('.download-btn').addEventListener('click', () => downloadFile(fileData.id));
+        fileItem.querySelector('.share-btn').addEventListener('click', () => shareFile(fileData.id));
+        fileItem.querySelector('.delete-btn').addEventListener('click', () => deleteFile(fileData.id));
+
         filesList.appendChild(fileItem);
     });
 }
 
 // Download file
 function downloadFile(id) {
-    const fileData = uploadedFiles.find(f => f.id == id);
+    const fileData = uploadedFiles.find(f => f.id === id);
     if (!fileData) return;
 
     const link = document.createElement('a');
@@ -118,7 +138,7 @@ function downloadFile(id) {
 
 // Share file
 function shareFile(id) {
-    const fileData = uploadedFiles.find(f => f.id == id);
+    const fileData = uploadedFiles.find(f => f.id === id);
     if (!fileData) return;
 
     // Create a shareable link (in a real app, this would be a server URL)
@@ -130,22 +150,24 @@ function shareFile(id) {
             text: shareText,
             url: fileData.url
         }).catch(err => console.log('Error sharing:', err));
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        // Fallback: copy to clipboard using modern Clipboard API (requires secure context)
+        navigator.clipboard.writeText(fileData.url)
+            .then(() => alert('Link copied to clipboard!'))
+            .catch(() => alert('Could not copy link. Please copy the URL manually.'));
     } else {
-        // Fallback: copy to clipboard
-        const tempInput = document.createElement('input');
-        tempInput.value = fileData.url;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        alert('Link copied to clipboard!');
+        alert('Sharing is not supported in this browser.');
     }
 }
 
 // Delete file
 function deleteFile(id) {
     if (confirm('Are you sure you want to delete this file?')) {
-        uploadedFiles = uploadedFiles.filter(f => f.id != id);
+        const fileData = uploadedFiles.find(f => f.id === id);
+        if (fileData) {
+            URL.revokeObjectURL(fileData.url);
+        }
+        uploadedFiles = uploadedFiles.filter(f => f.id !== id);
         displayFiles();
     }
 }
