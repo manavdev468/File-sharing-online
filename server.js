@@ -52,6 +52,8 @@ const upload = multer({
   limits: { fileSize: 500 * 1024 * 1024 }
 });
 
+const MAX_TEXT_CONTENT_LENGTH = 100000;
+
 // In-memory storage for shared items
 const dataFile = path.join(__dirname, 'shared-items.json');
 let sharedItems = [];
@@ -253,8 +255,9 @@ app.get('/', (req, res) => {
     function copyTextById(id) {
       const item = items.find(function(i) { return i.id === id; });
       if (item && item.content) {
-        navigator.clipboard.writeText(item.content);
-        showToast('Copied to clipboard!', 'success');
+        navigator.clipboard.writeText(item.content)
+          .then(function() { showToast('Copied to clipboard!', 'success'); })
+          .catch(function() { showToast('Failed to copy to clipboard.', 'error'); });
       }
     }
 
@@ -528,6 +531,10 @@ app.post('/api/text', (req, res) => {
   
   if (!content) {
     return res.status(400).json({ error: 'No content provided' });
+  }
+
+  if (content.length > MAX_TEXT_CONTENT_LENGTH) {
+    return res.status(400).json({ error: 'Content exceeds maximum length of 100,000 characters' });
   }
 
   const newItem = {
