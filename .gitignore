@@ -3,3 +3,6 @@ uploads/
 .env
 *.log
 npm-debug.log*
+shared-items.json
+.DS_Store
+Thumbs.db
